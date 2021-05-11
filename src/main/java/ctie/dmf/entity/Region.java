@@ -13,6 +13,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
@@ -35,10 +37,12 @@ public class Region extends PanacheEntityBase {
 	@Column(name = "region")
 	private String region;
 
+	
 	@ManyToOne
 	@JoinColumn(name = "country_pkey")
 	private Country country;
-
+	
+	@JsonIgnore
 	@OneToMany(targetEntity = Appellation.class, mappedBy = "region", fetch = FetchType.EAGER)
 	private List<Appellation> appellations;
 
@@ -65,13 +69,13 @@ public class Region extends PanacheEntityBase {
 		return producers;
 	}
 
-//	public Set<Appelation> getAppellations() {
-//		return appellations;
-//	}
-//
-//
-//	public void setAppelations(Set<Appelation> appellations) {
-//		this.appelations = appellations;
-//	}
+	public List<Appellation> getAppellations() {
+		return appellations;
+	}
+
+
+	public void setAppelations(List<Appellation> appellations) {
+		this.appellations = appellations;
+	}
 
 }

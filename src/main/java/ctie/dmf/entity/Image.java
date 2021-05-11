@@ -48,10 +48,12 @@ public class Image extends PanacheEntityBase {
 	@Column(name = "path")
 	private String path;
 
+	@JsonIgnore
 	@Column(name = "keypoints")
 	@Type(type="keypoints")
 	private KeyPointVectorType keypoints;
 
+	@JsonIgnore
 	@Column(name = "descriptors")
 	@Type(type="descriptors")
 	private MatType descriptors;

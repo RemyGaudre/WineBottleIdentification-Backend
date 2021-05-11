@@ -24,7 +24,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import ctie.dmf.entity.Country;
 import ctie.dmf.entity.Region;
 
-@Path("/countries/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/countries/")
 public class CountryAPI {
 
 	@GET

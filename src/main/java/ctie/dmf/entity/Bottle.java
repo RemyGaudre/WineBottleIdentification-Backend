@@ -1,7 +1,9 @@
 package ctie.dmf.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -34,8 +36,8 @@ public class Bottle extends PanacheEntityBase {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	@Column(name="name")
+
+	@Column(name = "name")
 	private String name;
 
 	@Column(name = "vintage")
@@ -44,7 +46,7 @@ public class Bottle extends PanacheEntityBase {
 	@Column(name = "alcohol")
 	private Double alcohol;
 
-	@OneToMany(targetEntity = Image.class, mappedBy = "bottle", fetch = FetchType.EAGER)
+	@OneToMany(targetEntity = Image.class, mappedBy = "bottle", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@Fetch(FetchMode.SELECT)
 	private List<Image> images;
 
@@ -52,7 +54,7 @@ public class Bottle extends PanacheEntityBase {
 	@JoinColumn(name = "winetype_pkey")
 	private WineType winetype;
 
-	@OneToMany(targetEntity = BottleWineStyle.class, mappedBy = "bottle", fetch = FetchType.EAGER)
+	@OneToMany(targetEntity = BottleWineStyle.class, mappedBy = "bottle", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@Fetch(FetchMode.SELECT)
 	private List<BottleWineStyle> bottlewinestyle;
 
@@ -71,10 +73,10 @@ public class Bottle extends PanacheEntityBase {
 	@ManyToOne
 	@JoinColumn(name = "producer_pkey")
 	private Producer producer;
-	
+
 	@Column(name = "isInformationNeeded")
 	private boolean isInformationNeeded;
-	
+
 	public Integer getVintage() {
 		return vintage;
 	}
@@ -154,6 +156,7 @@ public class Bottle extends PanacheEntityBase {
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public boolean isInformationNeeded() {
 		return isInformationNeeded;
 	}
@@ -166,13 +169,40 @@ public class Bottle extends PanacheEntityBase {
 		this.name = bottle.getName();
 		this.alcohol = bottle.getAlcohol();
 		this.vintage = bottle.getVintage();
-		this.winetype = bottle.getWinetype();
-		this.appellation = bottle.getAppellation();
-		this.grape_variety = bottle.getGrape_variety();
-		this.storage_instruction = bottle.getStorage_instruction();
-		this.bottlewinestyle = bottle.getBottlewinestyle();
-		this.producer = bottle.getProducer();
-		this.images = bottle.getImages();
+		this.winetype = WineType.findById(bottle.getWinetype().getId());
+		if (bottle.getAppellation() != null)
+			this.appellation = Appellation.findById(bottle.getAppellation().getId());
+		if (bottle.getGrape_variety() != null)
+			this.grape_variety = GrapeVariety.findById(bottle.getGrape_variety().getId());
+		if (bottle.getStorage_instruction() != null)
+			this.storage_instruction = StorageInstruction.findById(bottle.getStorage_instruction().getId());
+		if (bottle.getBottlewinestyle() != null) {
+			this.bottlewinestyle = new ArrayList<BottleWineStyle>();
+			for (BottleWineStyle bws : bottle.getBottlewinestyle()) {
+				this.bottlewinestyle.add(BottleWineStyle.findById(bws.getId()));
+			}
+		}
+		if (bottle.getProducer() != null)
+			this.producer = Producer.findById(bottle.getProducer().getId());
+		if (bottle.getImages() != null) {
+			this.images = new ArrayList<Image>();
+			for (Image i : bottle.getImages()) {
+				this.images.add(Image.findById(i.getId()));
+			}
+		}
 		this.isInformationNeeded = bottle.isInformationNeeded();
 	}
+	
+	public void removeImage(Image img) {
+		this.images.remove(img);
+	}
+
+	@Override
+	public String toString() {
+		return "Bottle [id=" + id + ", name=" + name + ", vintage=" + vintage + ", alcohol=" + alcohol + ", images="
+				+ images + ", winetype=" + winetype + ", bottlewinestyle=" + bottlewinestyle + ", appellation="
+				+ appellation + ", grape_variety=" + grape_variety + ", storage_instruction=" + storage_instruction
+				+ ", producer=" + producer + ", isInformationNeeded=" + isInformationNeeded + "]";
+	}
+
 }

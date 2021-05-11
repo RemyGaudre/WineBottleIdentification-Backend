@@ -5,16 +5,31 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 @Entity
 @Table(name = "storageinstruction")
-public class StorageInstruction extends PanacheEntity {
+public class StorageInstruction extends PanacheEntityBase {
+	
+	@SequenceGenerator(name = "storageinstruction_seq", sequenceName = "storageinstruction_id_seq", allocationSize = 1, initialValue = 1)
+    @Id
+    @GeneratedValue(generator = "storageinstruction_seq")
+	private Long id;
+	
+    public Long getId() {
+        return id;
+    }
+	public void setId(Long id) {
+        this.id = id;
+    }
 
 	@Column(name = "storage_instruction")
 	private String storage_instruction;

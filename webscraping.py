@@ -11,6 +11,55 @@ import numpy as np
 import ast
 import sys
 
+def main():
+
+    ImageDir = 'Images_saved'
+
+    #Uncomment to request and fetch data from Vivino website
+    print(delete_fetch_and_save_data(ImageDir))
+
+    df= get_data_from_file()
+    print("Downloading done")
+
+    #WineType
+    df["WineType"] = getListWineType(df["type"])
+    #WineName
+    df["WineName"] = getWineName(df)
+    #PinotNoir
+    df["Pinot Noir"] = contain(df['WineName'],"Pinot Noir")
+    #PinotGris
+    df["Pinot Gris"] = contain(df['WineName'],"Pinot Gris")
+    #PinotBlanc
+    df["Pinot Blanc"] = contain(df['WineName'],"Pinot Blanc")
+    #Riesling
+    df["Riesling"] = contain(df['WineName'],"Riesling")
+    #Auxerrois
+    df["Auxerrois"] = contain(df['WineName'],"Auxerrois")
+    #Rivaner
+    df["Rivaner"] = contain(df['WineName'],"Rivaner")
+    #Elbling
+    df["Elbling"] = contain(df['WineName'],"Elbling")
+    #Gewürztraminer
+    df["Gewürztraminer"] = contain(df['WineName'],"Gewürztraminer")
+    #Chardonnay
+    df["Chardonnay"] = contain(df['WineName'],"Chardonnay")
+    #Brut
+    df["Brut"] = contain(df['WineName'],"Brut")
+    #Crémant de Luxembourg
+    df["Crémant de Luxembourg"] = contain(df['WineName'],"Crémant de Luxembourg")
+    #Vin Classé
+    df["Vin Classé"] = contain(df['WineName'],"Vin Classé")
+    #Grand Premier Cru
+    df["Grand Premier Cru"] = contain(df['WineName'],"Grand Premier Cru")
+    #Premier Cru
+    df["Premier Cru"] = contain(df['WineName'],"Premier Cru")
+    #GrapeVariety
+    df["GrapeVariety"] = getGrapeVariety(df)
+    #Appellation
+    df["Appellation"] = getAppellation(df)
+
+    writeSqlFile(df)
+    print(df.columns)
 
 def getData(page = 1):
     r = requests.get(
@@ -36,13 +85,13 @@ def getData(page = 1):
     print(r)
     return r
 
-def getImage(path):
-    filename = "C:\\Users\\rgaudre\\Downloads\\wine-identifier\\Images_saved\\img_"+str(len(os.listdir("Images_saved")))+".jpg"
+def getImage(path, ImageDir):
+    filename = ImageDir + "\\img_"+str(len(os.listdir("Images_saved")))+".jpg"
     urllib.request.urlretrieve("http:"+path, filename)
     print("Image added: "+ filename)
     return filename
 
-def fetch_data():
+def fetch_data(ImageDir):
     baseData = getData().json()
     nTotal = baseData['explore_vintage']["records_matched"]
     nPage = len(baseData['explore_vintage']["matches"])
@@ -57,7 +106,7 @@ def fetch_data():
             # Id
             Id = w["vintage"]["id"]
             # Image
-            image_path = getImage(w["vintage"]["image"]["location"])
+            image_path = getImage(w["vintage"]["image"]["location"], ImageDir)
             # Nom
             WineName = w["vintage"]["name"]
             # Type : {1: "Red",2:"White", 3:"Sparkling",4:"Rosé",5:"Dessert",6:"Fortified"}
@@ -87,15 +136,14 @@ def fetch_data():
     #Df.columns=["id", "name", "image_path", "type", "region", "country", "winery", "tastes", "year"]
     return Df
 
-def delete_fetch_and_save_data():
-    ImageDir = 'Images_saved'
+def delete_fetch_and_save_data(ImageDir):
     for f in os.listdir(ImageDir):
         os.remove(os.path.join(ImageDir, f))
     try:
         os.remove("VivinoData.csv")
     except:
         pass
-    data = fetch_data()
+    data = fetch_data(ImageDir)
     data.to_csv("VivinoData.csv",sep=";", encoding="utf-8")
     return data
 
@@ -103,10 +151,6 @@ def get_data_from_file():
     return pandas.read_csv ('VivinoData.csv',sep=";",header=0,index_col=0)
 
 
-#print(delete_fetch_and_save_data())
-
-df= get_data_from_file()
-print("Downloading done")
 
 
 def red():
@@ -121,19 +165,19 @@ def dessert():
     return "Dessert"
 def fortified():
     return "Fortified"
-switcher = {
-    1: red,
-    2: white,
-    3: sparkling,
-    4: rose,
-    5: dessert,
-    6: fortified
-}
-
+def getSwitcherWineType():
+    return {
+        1: red,
+        2: white,
+        3: sparkling,
+        4: rose,
+        5: dessert,
+        6: fortified
+    }
 
 def getWineType(type):
     # Get the function from switcher dictionary
-    func = switcher.get(type, np.nan)
+    func = getSwitcherWineType().get(type, np.nan)
     # Execute the function
     return func()
 
@@ -149,18 +193,6 @@ def getWineName(df):
         x[0] = x[0].replace(' '+x[1],'').replace(x[2]+' ','').replace("'","''")
     return data[:,0]
 
-def contain(data,chain):
-    list=[]
-    for x in data:
-        if x.find(chain) !=-1:
-            list.append(True)
-        else:
-            list.append(False)
-    return list
-
-#r = getData(1).json()
-#with open('test.json', 'w') as json_file:
-#    json.dump(r, json_file)
 def getGrapeVariety(df):
     gv=[]
     for x in df.iloc:
@@ -181,43 +213,14 @@ def getAppellation(df):
         ap.append(a)
     return ap
 
-
-#WineType
-df["WineType"] = getListWineType(df["type"])
-#WineName
-df["WineName"] = getWineName(df)
-#PinotNoir
-df["Pinot Noir"] = contain(df['WineName'],"Pinot Noir")
-#PinotGris
-df["Pinot Gris"] = contain(df['WineName'],"Pinot Gris")
-#PinotBlanc
-df["Pinot Blanc"] = contain(df['WineName'],"Pinot Blanc")
-#Riesling
-df["Riesling"] = contain(df['WineName'],"Riesling")
-#Auxerrois
-df["Auxerrois"] = contain(df['WineName'],"Auxerrois")
-#Rivaner
-df["Rivaner"] = contain(df['WineName'],"Rivaner")
-#Elbling
-df["Elbling"] = contain(df['WineName'],"Elbling")
-#Gewürztraminer
-df["Gewürztraminer"] = contain(df['WineName'],"Gewürztraminer")
-#Chardonnay
-df["Chardonnay"] = contain(df['WineName'],"Chardonnay")
-#Brut
-df["Brut"] = contain(df['WineName'],"Brut")
-#Crémant de Luxembourg
-df["Crémant de Luxembourg"] = contain(df['WineName'],"Crémant de Luxembourg")
-#Vin Classé
-df["Vin Classé"] = contain(df['WineName'],"Vin Classé")
-#Grand Premier Cru
-df["Grand Premier Cru"] = contain(df['WineName'],"Grand Premier Cru")
-#Premier Cru
-df["Premier Cru"] = contain(df['WineName'],"Premier Cru")
-#GrapeVariety
-df["GrapeVariety"] = getGrapeVariety(df)
-#Appellation
-df["Appellation"] = getAppellation(df)
+def contain(data,chain):
+    list=[]
+    for x in data:
+        if x.find(chain) !=-1:
+            list.append(True)
+        else:
+            list.append(False)
+    return list
 
 def writeSqlFile(df):
     s = ""
@@ -291,5 +294,5 @@ def writeSqlFile(df):
     with open("src\\main\\resources\\import.sql", "w") as text_file:
         text_file.write(s+w+imgs)
 
-writeSqlFile(df)
-print(df.columns)
+if __name__ == "__main__":
+    main()

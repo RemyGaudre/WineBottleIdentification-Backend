@@ -1,5 +1,6 @@
 package ctie.dmf.finder;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -16,7 +17,6 @@ import org.opencv.core.Size;
 import org.opencv.features2d.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
-import org.opencv.core.CvType;
 
 import ctie.dmf.customType.KeyPointVectorType;
 import ctie.dmf.customType.MatType;
@@ -27,11 +27,12 @@ import nu.pattern.OpenCV;
 
 public class BottleFinder {
 
-	List<Image> images;
-	ORB orb;
-    DescriptorMatcher matcher;
+	private List<Image> images;
+	private ORB orb;
+    private DescriptorMatcher matcher;
+	private String cwd = System.getProperty("user.dir")+ "\\..\\";
 	
-	private final int NFEATURE = 100;
+	private final int NFEATURE = 5000;
 	private final int INPUT_SIZE = 416;
 	private final float RATIO_TRESHOLD = 0.75f;
 	
@@ -40,13 +41,13 @@ public class BottleFinder {
 		this.images = Image.listAll();
 		this.orb = ORB.create(NFEATURE);
 		initialise_images();
-		matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
+		matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMINGLUT);
 
 	}
 	
 	private Mat loadImage(String path) {
-		Imgcodecs cdc = new Imgcodecs();
-		return cdc.imread(path);
+		String cwd = System.getProperty("user.dir")+ "\\..\\";
+		return Imgcodecs.imread(cwd + path);
 	}
 	
 	private Mat resizeImage(Mat src) {
@@ -70,6 +71,7 @@ public class BottleFinder {
 			orb.detectAndCompute(resizeimage,new Mat(), kp, desc);
 			i.setKeypoints(kp);
 			i.setDescriptors(desc);
+			
 		}
 	}
 	

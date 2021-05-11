@@ -26,7 +26,7 @@ import ctie.dmf.entity.Bottle;
 import ctie.dmf.entity.Image;
 import ctie.dmf.entity.Producer;
 
-@Path("/bottles/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/bottles/")
 public class BottlesAPI {
 
 	@GET
@@ -111,11 +111,11 @@ public class BottlesAPI {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Operation(operationId = "updateBottle", summary = "Update a bottle", description = "Update a bottle")
 	@APIResponse(responseCode = "200", description = "The resource was updated and content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
-	public Response updateBottle(@PathParam("id") Long id,
+	public Response updateBottle(
 			@RequestBody(description = "Bottle updated", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Bottle.class))) Bottle bottle) {
 		Bottle original = Bottle.findById(bottle.getId());
-		if (original == null)
-			return Response.status(Response.Status.NOT_FOUND).build();
+		System.out.println(original.toString());
+		if (original == null) {return Response.status(Response.Status.NOT_FOUND).build();}
 		original.update(bottle);
 		Bottle.persist(original);
 		if (original.isPersistent()) {

@@ -25,7 +25,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import ctie.dmf.entity.Bottle;
 import ctie.dmf.entity.WineType;
 
-@Path("/winetypes/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/winetypes/")
 public class WineTypeAPI {
 
 	@GET
@@ -78,7 +78,6 @@ public class WineTypeAPI {
 	}
 
 	@PUT
-	@Path("{id}")
 	@Transactional
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -86,7 +85,7 @@ public class WineTypeAPI {
 	@APIResponse(responseCode = "200", description = "The resource was updated and content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response updateWineType(@PathParam("id") Long id,
 			@RequestBody(description = "WineType updated", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = WineType.class))) WineType winetype) {
-		WineType original = WineType.findById(id);
+		WineType original = WineType.findById(winetype.getId());
 		if (original == null)
 			return Response.status(Response.Status.NOT_FOUND).build();
 		original.update(winetype);
@@ -103,10 +102,21 @@ public class WineTypeAPI {
 	@Operation(operationId = "deleteWineType", summary = "Delete a WineType", description = "Delete a WineType")
 	@APIResponse(responseCode = "200", description = "The resource was deleted and some content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response deleteWineType(@PathParam("id") Long id) {
-		boolean deleted = WineType.deleteById(id);
-		if (deleted) {
-			return Response.noContent().build();
+		WineType wt = WineType.findById(id);
+		if (wt != null) {
+			if(wt.Bottles() != null) {
+				for(Bottle b : wt.Bottles()) {
+					b.setWinetype(null);
+					b.flush();
+				}
+			}
+			boolean deleted = WineType.deleteById(id);
+			if (deleted) {
+				return Response.noContent().build();
+			}
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
 		}
-		return Response.status(Response.Status.BAD_REQUEST).build();
 	}
 }

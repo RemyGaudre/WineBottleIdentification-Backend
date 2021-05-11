@@ -25,7 +25,8 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import ctie.dmf.entity.Bottle;
 import ctie.dmf.entity.Producer;
 
-@Path("/producers/" + API.__VERSION__)
+
+@Path("/admin/" + API.__VERSION__ + "/producers/")
 public class ProducerAPI {
 
 	@GET

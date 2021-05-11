@@ -21,11 +21,13 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.hibernate.exception.ConstraintViolationException;
+import org.postgresql.util.PSQLException;
 
 import ctie.dmf.entity.Appellation;
 import ctie.dmf.entity.Bottle;
 
-@Path("/appellations/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/appellations/")
 public class AppellationAPI {
 
 	@GET
@@ -75,15 +77,13 @@ public class AppellationAPI {
 	}
 
 	@PUT
-	@Path("{id}")
 	@Transactional
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Operation(operationId = "updateAppellation", summary = "Update an appellation", description = "Update an appellation")
 	@APIResponse(responseCode = "200", description = "The resource was updated and content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
-	public Response updateAppellation(@PathParam("id") Long id,
-			@RequestBody(description = "Appellation updated", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Appellation.class))) Appellation appelation) {
-		Appellation original = Appellation.findById(id);
+	public Response updateAppellation(@RequestBody(description = "Appellation updated", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Appellation.class))) Appellation appelation) {
+		Appellation original = Appellation.findById(appelation.getId());
 		if (original == null)
 			return Response.status(Response.Status.NOT_FOUND).build();
 		original.update(appelation);
@@ -100,10 +100,16 @@ public class AppellationAPI {
 	@Operation(operationId = "deleteAppellation", summary = "delete a appelation", description = "delete a appelation")
 	@APIResponse(responseCode = "200", description = "The resource was deleted and some content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response deleteAppellation(@PathParam("id") Long id) {
-		boolean deleted = Appellation.deleteById(id);
-		if (deleted) {
-			return Response.noContent().build();
+		System.out.println("Try to delete: Appelation " + id);
+		try {
+			boolean deleted = Appellation.deleteById(id);
+			if (deleted) {
+				return Response.noContent().build();
+			}else {
+				return Response.status(Response.Status.NOT_FOUND).build();
+			}
+		}catch(ConstraintViolationException e) {
+			return Response.status(Response.Status.NOT_ACCEPTABLE).build();
 		}
-		return Response.status(Response.Status.NOT_FOUND).build();
 	}
 }

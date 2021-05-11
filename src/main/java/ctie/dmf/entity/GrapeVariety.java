@@ -2,6 +2,7 @@ package ctie.dmf.entity;
 
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -33,7 +34,7 @@ public class GrapeVariety extends PanacheEntityBase {
 	@Column(name = "grape_variety")
 	private String grape_variety;
 
-	@OneToMany(targetEntity = Bottle.class, mappedBy = "grape_variety", fetch = FetchType.EAGER)
+	@OneToMany(targetEntity = Bottle.class, mappedBy = "grape_variety", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<Bottle> bottles;
 
 	public String getGrape_variety() {

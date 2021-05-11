@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -21,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -31,10 +33,16 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import ctie.dmf.entity.Image;
 
-@Path("/images/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/images/")
 public class ImageAPI {
 
-	private final static String IMAGES_DIR = "C:\\Users\\rgaudre\\Downloads\\wine-identifier\\Images_saved\\";
+	@Inject
+	@ConfigProperty(name = "images_dir")
+	protected String IMAGES_DIR;
+
+	@Inject
+	@ConfigProperty(name = "images_saved_folder")
+	protected String IMAGES_SAVED_FOLDER;
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -46,7 +54,7 @@ public class ImageAPI {
 
 		return Response.ok(images).build();
 	}
-	
+
 	@GET
 	@Path("/{id}/bottle")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -55,10 +63,13 @@ public class ImageAPI {
 	public Response getBottleOfAnImage(@PathParam("id") Long id) {
 
 		Image image = Image.findById(id);
-
-		return Response.ok(image.getBottle()).build();
+		if (image != null) {
+			return Response.ok(image.getBottle()).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
 	}
-	
+
 	@GET
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -67,10 +78,12 @@ public class ImageAPI {
 	public Response getAnImage(@PathParam("id") Long id) {
 
 		Image image = Image.findById(id);
-
-		return Response.ok(image).build();
+		if (image != null) {
+			return Response.ok(image).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
 	}
-
 
 	@POST
 	@Transactional
@@ -88,7 +101,7 @@ public class ImageAPI {
 		for (InputPart inputPart : inputParts) {
 
 			try {
-				String fileName = getFileName(IMAGES_DIR);
+				String fileName = getFileName(IMAGES_DIR + IMAGES_SAVED_FOLDER);
 
 				// convert the uploaded file to inputstream
 				InputStream inputStream = inputPart.getBody(InputStream.class, null);
@@ -96,14 +109,12 @@ public class ImageAPI {
 				byte[] bytes = IOUtils.toByteArray(inputStream);
 
 				// constructs upload file path
-				fileName = IMAGES_DIR + fileName;
+				writeFile(bytes, IMAGES_DIR + IMAGES_SAVED_FOLDER + fileName);
 
-				writeFile(bytes, fileName);
-
-				System.out.println("New file: " + fileName);
+				System.out.println("New image saved at: " + IMAGES_DIR + IMAGES_SAVED_FOLDER + fileName);
 
 				Image img = new Image();
-				img.setPath(fileName);
+				img.setPath(IMAGES_SAVED_FOLDER + fileName);
 				Image.persist(img);
 				if (img.isPersistent()) {
 					return Response.status(Status.CREATED).entity(img).build();
@@ -133,7 +144,6 @@ public class ImageAPI {
 	private void writeFile(byte[] content, String filename) throws IOException {
 
 		File file = new File(filename);
-		System.out.println(filename);
 		if (!file.exists()) {
 			file.createNewFile();
 		}
@@ -170,10 +180,17 @@ public class ImageAPI {
 	@Operation(operationId = "deleteImage", summary = "Delete an Image", description = "Delete an Image")
 	@APIResponse(responseCode = "200", description = "The resource was deleted and some content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response deleteImage(@PathParam("id") Long id) {
-		boolean deleted = Image.deleteById(id);
-		if (deleted) {
-			return Response.noContent().build();
+		Image img = Image.findById(id);
+		if(img != null) {
+			if(img.getBottle() != null) img.getBottle().removeImage(img);
+			img.delete();
+			if (!(img.isPersistent())) {
+				return Response.noContent().build();
+			}else {
+				return Response.status(Response.Status.BAD_REQUEST).build();
+			}
+		}else {
+			return Response.status(Response.Status.NOT_FOUND).build();
 		}
-		return Response.status(Response.Status.BAD_REQUEST).build();
 	}
 }

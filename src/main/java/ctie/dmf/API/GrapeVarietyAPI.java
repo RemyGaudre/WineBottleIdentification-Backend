@@ -25,7 +25,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import ctie.dmf.entity.Bottle;
 import ctie.dmf.entity.GrapeVariety;
 
-@Path("/grapevarieties/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/grapevarieties/")
 public class GrapeVarietyAPI {
 
 	@GET

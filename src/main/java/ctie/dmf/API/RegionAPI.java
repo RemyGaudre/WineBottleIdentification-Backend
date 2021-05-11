@@ -23,11 +23,12 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
 import ctie.dmf.entity.Bottle;
+import ctie.dmf.entity.Country;
 import ctie.dmf.entity.Producer;
 import ctie.dmf.entity.Region;
 import ctie.dmf.entity.StorageInstruction;
 
-@Path("/regions/" + API.__VERSION__)
+@Path("/admin/" + API.__VERSION__ + "/regions/")
 public class RegionAPI {
 
 	@GET
@@ -69,6 +70,13 @@ public class RegionAPI {
 	@APIResponse(responseCode = "201", description = "The resource was created and content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response createRegion(
 			@RequestBody(description = "Region to create", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Region.class))) Region region) {
+		try {
+			if (region.getCountry() != null) {
+				region.setCountry(Country.findById(region.getCountry().getId()));
+			}
+		} catch (Exception e) {
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
 		Region.persist(region);
 		if (region.isPersistent()) {
 			return Response.status(Status.CREATED).entity(region).build();
@@ -82,9 +90,15 @@ public class RegionAPI {
 	@Operation(operationId = "deleteRegion", summary = "delete a region", description = "delete a region")
 	@APIResponse(responseCode = "200", description = "The resource was deleted and some content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response deleteRegion(@PathParam("id") Long id) {
-		boolean deleted = Region.deleteById(id);
-		if (deleted) {
-			return Response.noContent().build();
+		Region r = Region.findById(id);
+		if(r != null) {
+			if(r.getCountry() != null) r.getCountry().removeRegion(r);
+			boolean deleted = Region.deleteById(id);
+			if (deleted) {
+				return Response.noContent().build();
+			}else {
+				return Response.status(Response.Status.BAD_REQUEST).build();
+			}
 		}
 		return Response.status(Response.Status.NOT_FOUND).build();
 	}

@@ -136,7 +136,7 @@ public class Producer extends PanacheEntityBase {
 		this.address = producer.getAddress();
 		this.city = producer.getCity();
 		this.postalcode = producer.getPostalcode();
-		this.region = producer.getRegion();
+		if(producer.getRegion()!=null) this.region = producer.getRegion();
 		this.website = producer.getWebsite();
 		this.phone = producer.getPhone();
 		this.email = producer.getEmail();

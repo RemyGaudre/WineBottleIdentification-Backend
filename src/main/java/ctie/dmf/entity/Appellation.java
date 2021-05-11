@@ -2,6 +2,7 @@ package ctie.dmf.entity;
 
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,7 +44,7 @@ public class Appellation extends PanacheEntityBase {
 	private Region region;
 	
 	@JsonIgnore
-	@OneToMany(targetEntity = Bottle.class, mappedBy = "appellation", fetch = FetchType.EAGER)
+	@OneToMany(targetEntity = Bottle.class, mappedBy = "appellation", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<Bottle> bottles;
 
 	public String getAppellation() {

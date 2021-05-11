@@ -1,7 +1,9 @@
 package ctie.dmf.entity;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -33,7 +35,7 @@ public class Country extends PanacheEntityBase {
 	@Column(name = "country")
 	private String country;
 
-	@OneToMany(targetEntity = Region.class, mappedBy = "country", fetch = FetchType.EAGER)
+	@OneToMany(targetEntity = Region.class, mappedBy = "country", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private List<Region> regions;
 
 	public String getCountry() {
@@ -45,7 +47,11 @@ public class Country extends PanacheEntityBase {
 	}
 
 	public List<Region> Regions() {
-		return regions;
+		return this.regions.stream().distinct().collect(Collectors.toList());
+	}
+	
+	public void removeRegion(Region region) {
+		this.regions.remove(region);
 	}
 
 }
