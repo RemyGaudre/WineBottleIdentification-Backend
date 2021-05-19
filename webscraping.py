@@ -16,7 +16,7 @@ def main():
     ImageDir = 'Images_saved'
 
     #Uncomment to request and fetch data from Vivino website
-    print(delete_fetch_and_save_data(ImageDir))
+    #print(delete_fetch_and_save_data(ImageDir))
 
     df= get_data_from_file()
     print("Downloading done")

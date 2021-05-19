@@ -1,5 +1,6 @@
 package ctie.dmf.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -59,7 +60,7 @@ public class Image extends PanacheEntityBase {
 	private MatType descriptors;
 
 	@JsonIgnore
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "bottle_pkey")
 	private Bottle bottle;
 	
@@ -95,7 +96,6 @@ public class Image extends PanacheEntityBase {
 		this.descriptors = descriptors;
 	}
 
-	@JsonIgnore
 	public Bottle getBottle() {
 		return bottle;
 	}
@@ -109,4 +109,10 @@ public class Image extends PanacheEntityBase {
 		this.setBottle(img.getBottle());
 	}
 
+	@Override
+	public String toString() {
+		return "Image [id=" + id + ", path=" + path + ", bottle=" + this.bottle.getId() + "]";
+	}
+
+	
 }

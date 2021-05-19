@@ -1,6 +1,7 @@
 package ctie.dmf.API;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -98,7 +99,8 @@ public class BottlesAPI {
 	@APIResponse(responseCode = "201", description = "The resource was created and content is returned", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	public Response createBottle(
 			@RequestBody(description = "Bottle to create", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Bottle.class))) Bottle bottle) {
-		Bottle.persist(bottle);
+		bottle.update(bottle);
+		bottle.persistAndFlush();
 		if (bottle.isPersistent()) {
 			return Response.status(Status.CREATED).entity(bottle).build();
 		}
@@ -114,10 +116,9 @@ public class BottlesAPI {
 	public Response updateBottle(
 			@RequestBody(description = "Bottle updated", required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Bottle.class))) Bottle bottle) {
 		Bottle original = Bottle.findById(bottle.getId());
-		System.out.println(original.toString());
 		if (original == null) {return Response.status(Response.Status.NOT_FOUND).build();}
 		original.update(bottle);
-		Bottle.persist(original);
+		original.persistAndFlush();
 		if (original.isPersistent()) {
 			return Response.status(Status.CREATED).entity(original).build();
 		}

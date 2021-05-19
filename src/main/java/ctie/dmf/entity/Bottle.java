@@ -47,7 +47,7 @@ public class Bottle extends PanacheEntityBase {
 	private Double alcohol;
 
 	@OneToMany(targetEntity = Image.class, mappedBy = "bottle", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@Fetch(FetchMode.SELECT)
+	@Fetch(FetchMode.SUBSELECT)
 	private List<Image> images;
 
 	@ManyToOne
@@ -179,7 +179,7 @@ public class Bottle extends PanacheEntityBase {
 		if (bottle.getBottlewinestyle() != null) {
 			this.bottlewinestyle = new ArrayList<BottleWineStyle>();
 			for (BottleWineStyle bws : bottle.getBottlewinestyle()) {
-				this.bottlewinestyle.add(BottleWineStyle.findById(bws.getId()));
+				this.bottlewinestyle.add((BottleWineStyle) BottleWineStyle.findById(bws.getId()));
 			}
 		}
 		if (bottle.getProducer() != null)
@@ -187,7 +187,7 @@ public class Bottle extends PanacheEntityBase {
 		if (bottle.getImages() != null) {
 			this.images = new ArrayList<Image>();
 			for (Image i : bottle.getImages()) {
-				this.images.add(Image.findById(i.getId()));
+				this.images.add((Image)Image.findById(i.getId()));
 			}
 		}
 		this.isInformationNeeded = bottle.isInformationNeeded();

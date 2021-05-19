@@ -37,17 +37,15 @@ public class BottleFinderAPI {
 
 	private BottleFinder finder = new BottleFinder();
 	private long timeElapsed = 0;
-	
+
 	@Inject
 	@ConfigProperty(name = "images_dir")
-	protected static String IMAGES_DIR;
+	protected String IMAGES_DIR;
 
 	@Inject
 	@ConfigProperty(name = "images_received_folder")
 	protected String IMAGES_RECEIVED_FOLDER;
-	
-	
-	
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(operationId = "getAppellations", summary = "Get all existing appellations", description = "List every appellations")
@@ -58,8 +56,7 @@ public class BottleFinderAPI {
 		System.out.println("[INFO] Object Dectection Initialised");
 		return Response.status(Response.Status.OK).build();
 	}
-	
-	
+
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -68,42 +65,38 @@ public class BottleFinderAPI {
 	public Response identify(
 			@RequestBody(description = "Image file", required = true, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA, schema = @Schema(implementation = MultipartFormDataInput.class))) MultipartFormDataInput data)
 			throws IOException {
+		try {
+			InputPart inputPart = data.getParts().get(0);
+			long startTime = System.nanoTime();
+			String fileName = getFileName(IMAGES_DIR + IMAGES_RECEIVED_FOLDER);
 
-		Map<String, List<InputPart>> uploadForm = data.getFormDataMap();
-		List<InputPart> inputParts = uploadForm.get("file");
+			// convert the uploaded file to inputstream
+			InputStream inputStream = inputPart.getBody(InputStream.class, null);
 
-		for (InputPart inputPart : inputParts) {
+			byte[] bytes = IOUtils.toByteArray(inputStream);
 
-			try {
-				long startTime = System.nanoTime();
-				String fileName = getFileName(IMAGES_DIR + IMAGES_RECEIVED_FOLDER);
+			// constructs upload file path
+			writeFile(bytes, IMAGES_DIR + IMAGES_RECEIVED_FOLDER + fileName);
 
-				// convert the uploaded file to inputstream
-				InputStream inputStream = inputPart.getBody(InputStream.class, null);
+			Image img = new Image();
+			img.setPath(IMAGES_RECEIVED_FOLDER + fileName);
 
-				byte[] bytes = IOUtils.toByteArray(inputStream);
-
-				// constructs upload file path
-				writeFile(bytes,IMAGES_DIR + IMAGES_RECEIVED_FOLDER + fileName);
-
-				Image img = new Image();
-				img.setPath(IMAGES_RECEIVED_FOLDER + fileName);
-				
-				Bottle correspondingBottle = finder.identify(img);
-				long duration = (System.nanoTime() - startTime);
-				this.timeElapsed += duration;
-				System.out.println("[INFO] Object detection took : " + duration/1000000 + "ms");
-				System.out.println("[INFO] Total Object detection took : " + this.timeElapsed/1000000 + "ms");
-				
+			Bottle correspondingBottle = finder.identify(img);
+			long duration = (System.nanoTime() - startTime);
+			this.timeElapsed += duration;
+			System.out.println("[INFO] Object detection took : " + duration / 1000000 + "ms");
+			System.out.println("[INFO] Total Object detection took : " + this.timeElapsed / 1000000 + "ms");
+			if (correspondingBottle == null) {
+				return Response.status(Response.Status.NOT_FOUND).build();
+			} else {
 				return Response.ok(correspondingBottle).build();
-
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
-		return Response.status(Response.Status.BAD_REQUEST).build();
 	}
-	
+
 	private String getFileName(String Image_dir) {
 
 		try {
@@ -111,13 +104,13 @@ public class BottleFinderAPI {
 
 			// Populates the array with names of files and directories
 			String[] pathnames = f.list();
-			System.out.println("[INFO] Number of images received : "+ pathnames.length);
+			System.out.println("[INFO] Number of images received : " + pathnames.length);
 			return "Image_" + pathnames.length + ".jpg";
 		} catch (Exception e) {
 			return "Image_0.jpg";
 		}
 	}
-	
+
 	private void writeFile(byte[] content, String filename) throws IOException {
 
 		File file = new File(filename);
